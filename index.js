@@ -2,7 +2,11 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
+// Importation des routes
 const userRoutes = require("./routes/userRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
+const eventRoutes = require("./routes/eventRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -13,6 +17,9 @@ app.use(express.json());
 
 // Routes principales
 app.use("/api/users", userRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/events", eventRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 // Route d'accueil
 app.get("/", (req, res) => {
