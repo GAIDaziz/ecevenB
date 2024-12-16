@@ -1,9 +1,16 @@
 const express = require("express");
-const { getAllUsers, createUser } = require("../controllers/userController");
+const { registerUser, loginUser, getUserProfile } = require("../controllers/userController");
+const { protect } = require("../middleware/auth");
+
 const router = express.Router();
 
-// Routes utilisateurs
-router.get("/", getAllUsers);        // Obtenir tous les utilisateurs
-router.post("/", createUser);       // Ajouter un utilisateur
+// Inscription
+router.post("/register", registerUser);
+
+// Connexion
+router.post("/login", loginUser);
+
+// Profil utilisateur (route sécurisée)
+router.get("/profile", protect, getUserProfile);
 
 module.exports = router;
