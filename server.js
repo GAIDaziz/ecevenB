@@ -1,6 +1,7 @@
 const express = require("express");
 const userRoutes = require("./routes/userRoutes");
 const eventRoutes = require("./routes/eventRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
 
 const app = express();
 const PORT = 5000;
@@ -13,6 +14,9 @@ app.use("/api/users", userRoutes);
 
 //evénement rout 
 app.use("/api/events", eventRoutes);
+
+//catégorie rout 
+app.use("/api/categories", categoryRoutes);
 
 
 // Démarrer le serveur

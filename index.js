@@ -19,7 +19,8 @@ app.use(express.json());
 app.use("/api/users", userRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/events", eventRoutes);
-app.use("/api/reviews", reviewRoutes);
+app.use("/api/reviews", reviewRoutes);   
+app.use("/api/categories", categoryRoutes);
 
 // Route d'accueil
 app.get("/", (req, res) => {
@@ -30,3 +31,4 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Serveur lancé sur le port ${PORT}`);
 });
+
