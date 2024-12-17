@@ -1,45 +1,107 @@
-// Simule une base de données en mémoire
-let events = [
-    {
-      id: 1,
-      title: "Concert de Jazz",
-      description: "Une soirée de jazz incroyable.",
-      date: "2024-12-25T19:00:00",
-      location: "Paris, Salle A",
-      price: 50.00,
-      organizer_id: 1,
-      category_id: 1
-    }
-  ];
-  
-  // Obtenir tous les événements
-  const getAllEvents = (req, res) => {
-    res.json(events);
+// controllers/eventController.js
+
+let events = require("../models/eventModel");
+
+// Création d'un événement
+const createEvent = (req, res) => {
+  const { title, description, date, location, price, category } = req.body;
+
+  if (!title || !date || !location || !price || !category) {
+    return res.status(400).json({ error: "Tous les champs sont requis" });
+  }
+
+  const event = {
+    id: events.length + 1,
+    title,
+    description,
+    date,
+    location,
+    price,
+    category,
+    organizer: req.user.id,
   };
-  
-  // Créer un nouvel événement
-  const createEvent = (req, res) => {
-    const { title, description, date, location, price, organizer_id, category_id } = req.body;
-  
-    // Vérification des champs requis
-    if (!title || !date || !location || !price || !organizer_id || !category_id) {
-      return res.status(400).json({ error: "Tous les champs sont requis" });
-    }
-  
-    const newEvent = {
-      id: events.length + 1,
-      title,
-      description,
-      date,
-      location,
-      price: parseFloat(price),
-      organizer_id: parseInt(organizer_id),
-      category_id: parseInt(category_id)
-    };
-  
-    events.push(newEvent);
-    res.status(201).json(newEvent);
-  };
-  
-  module.exports = { getAllEvents, createEvent };
-  
+
+  events.push(event);
+  res.status(201).json({ message: "Événement créé avec succès", event });
+};
+
+// Liste des événements
+const getEvents = (req, res) => {
+  const { category, date } = req.query;
+
+  let filteredEvents = events;
+
+  if (category) {
+    filteredEvents = filteredEvents.filter(
+      (event) => event.category.toLowerCase() === category.toLowerCase()
+    );
+  }
+
+  if (date) {
+    filteredEvents = filteredEvents.filter(
+      (event) => new Date(event.date).toISOString().split("T")[0] === date
+    );
+  }
+
+  res.json(filteredEvents);
+};
+
+// Détails d'un événement
+const getEventById = (req, res) => {
+  const event = events.find((e) => e.id === parseInt(req.params.id));
+
+  if (!event) {
+    return res.status(404).json({ error: "Événement non trouvé" });
+  }
+
+  res.json(event);
+};
+
+// Mise à jour d'un événement
+const updateEvent = (req, res) => {
+  const event = events.find((e) => e.id === parseInt(req.params.id));
+
+  if (!event) {
+    return res.status(404).json({ error: "Événement non trouvé" });
+  }
+
+  if (event.organizer !== req.user.id) {
+    return res.status(403).json({ error: "Accès refusé" });
+  }
+
+  const { title, description, date, location, price, category } = req.body;
+
+  if (title) event.title = title;
+  if (description) event.description = description;
+  if (date) event.date = date;
+  if (location) event.location = location;
+  if (price) event.price = price;
+  if (category) event.category = category;
+
+  res.json({ message: "Événement mis à jour", event });
+};
+
+// Suppression d'un événement
+const deleteEvent = (req, res) => {
+  const eventIndex = events.findIndex((e) => e.id === parseInt(req.params.id));
+
+  if (eventIndex === -1) {
+    return res.status(404).json({ error: "Événement non trouvé" });
+  }
+
+  const event = events[eventIndex];
+  if (event.organizer !== req.user.id) {
+    return res.status(403).json({ error: "Accès refusé" });
+  }
+
+  events.splice(eventIndex, 1);
+  res.json({ message: "Événement supprimé avec succès" });
+};
+
+module.exports = {
+  createEvent,
+  getEvents,
+  getEventById,
+  updateEvent,
+  deleteEvent,
+};
