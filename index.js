@@ -7,6 +7,7 @@ const userRoutes = require("./routes/userRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const eventRoutes = require("./routes/eventRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -21,6 +22,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/reviews", reviewRoutes);   
 app.use("/api/categories", categoryRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Route d'accueil
 app.get("/", (req, res) => {
