@@ -1,10 +1,10 @@
-const express = require("express");
+/*const express = require("express");
 const userRoutes = require("./routes/userRoutes");
 const eventRoutes = require("./routes/eventRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 
 const app = express();
-const PORT = 5000;
+const PORT = 3000;
 
 // Middleware pour lire le JSON
 app.use(express.json());

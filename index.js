@@ -2,7 +2,9 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
+
 // Importation des routes
+const db = require("./config/db"); // Assurez-vous que ce fichier configure bien la connexion à MySQL.
 const userRoutes = require("./routes/userRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const eventRoutes = require("./routes/eventRoutes");
@@ -10,7 +12,17 @@ const reviewRoutes = require("./routes/reviewRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
+
+// Initialisation de la base de données
+db.connect((err) => {
+  if (err) {
+    console.error("Erreur de connexion à la base de données : ", err);
+    process.exit(1);
+  } else {
+    console.log("Connexion réussie à la base de données MySQL");
+  }
+});
 
 // Middleware
 app.use(cors());
@@ -20,9 +32,8 @@ app.use(express.json());
 app.use("/api/users", userRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/events", eventRoutes);
-app.use("/api/reviews", reviewRoutes);   
-app.use("/api/categories", categoryRoutes);
-app.use("/api/admin", adminRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/admin", adminRoutes); // Attention à ce que ces routes soient bien définies dans adminRoutes.js
 
 // Route d'accueil
 app.get("/", (req, res) => {
@@ -33,4 +44,3 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Serveur lancé sur le port ${PORT}`);
 });
-

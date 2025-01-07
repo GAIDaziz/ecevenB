@@ -4,6 +4,7 @@ let users = [
     { id: 2, name: "Event Organizer", email: "organizer@example.com", role: "ORGANIZER" },
     { id: 3, name: "Participant User", email: "participant@example.com", role: "PARTICIPANT" },
   ];
+
   
   // Fonctions de validation
   const isValidEmail = (email) => {
@@ -65,10 +66,49 @@ let users = [
     res.json({ message: "Utilisateur supprimé avec succès" });
   };
   
+  // Simuler des données dans adminController.js
+let events = [
+  { id: 1, title: "Concert de jazz", date: "2024-12-20" },
+  { id: 2, title: "Conférence tech", date: "2024-12-22" },
+];
+
+let categories = [
+  { id: 1, name: "Musique" },
+  { id: 2, name: "Conférence" },
+];
+
+let reviews = [
+  { id: 1, eventId: 1, userId: 2, rating: 5, comment: "Super événement !" },
+];
+
+  
+  
+  // Tableau de bord : statistiques clés
+const getDashboardStats = (req, res) => {
+  const totalUsers = users.length;
+  const totalEvents = events.length;      // Simulez les événements
+  const totalCategories = categories.length;  // Simulez les catégories
+  const totalReviews = reviews.length;    // Simulez les avis
+
+  res.json({
+    message: "Statistiques du tableau de bord",
+    stats: {
+      totalUsers,
+      totalEvents,
+      totalCategories,
+      totalReviews,
+    },
+  });
+};
+
+
+
+
   // Exporter les fonctions
   module.exports = {
     getAllUsers,
     updateUser,
     deleteUser,
+    getDashboardStats,  
   };
   
