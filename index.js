@@ -14,15 +14,6 @@ const adminRoutes = require("./routes/adminRoutes");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Initialisation de la base de données
-db.connect((err) => {
-  if (err) {
-    console.error("Erreur de connexion à la base de données : ", err);
-    process.exit(1);
-  } else {
-    console.log("Connexion réussie à la base de données MySQL");
-  }
-});
 
 // Middleware
 app.use(cors());

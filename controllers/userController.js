@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-let users = require("../models/userModel");
+let user = require("../models/userModel");
 const db = require("../config/db");
 
 
@@ -9,26 +9,25 @@ const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
 
   if (!name || !email || !password) {
-    return res.status(400).json({ error: "Tous les champs sont requis" });
+      return res.status(400).json({ error: "Tous les champs sont requis" });
   }
 
-  const userExists = users.find((user) => user.email === email);
-  if (userExists) {
-    return res.status(400).json({ error: "Utilisateur déjà enregistré" });
+  try {
+      const [userExists] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+
+      if (userExists.length > 0) {
+          return res.status(400).json({ error: "Utilisateur déjà enregistré" });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      await db.query('INSERT INTO users (name, email, password) VALUES (?, ?, ?)', [name, email, hashedPassword]);
+
+      res.status(201).json({ message: "Utilisateur créé avec succès" });
+  } catch (err) {
+      res.status(500).json({ error: "Erreur lors de l'enregistrement de l'utilisateur" });
   }
-
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
-
-  const newUser = {
-    id: users.length + 1,
-    name,
-    email,
-    password: hashedPassword,
-  };
-
-  users.push(newUser);
-  res.status(201).json({ message: "Utilisateur créé avec succès", user: newUser });
 };
 
 // Connexion de l'utilisateur
@@ -39,24 +38,32 @@ const loginUser = async (req, res) => {
     return res.status(400).json({ error: "Tous les champs sont requis" });
   }
 
-  const user = users.find((user) => user.email === email);
-  if (!user) {
-    return res.status(400).json({ error: "Email ou mot de passe incorrect" });
+  try {
+    const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+
+    if (users.length === 0) {
+      return res.status(400).json({ error: "Email ou mot de passe incorrect" });
+    }
+
+    const user = users[0];
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ error: "Email ou mot de passe incorrect" });
+    }
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET || "secretkey",
+      { expiresIn: "1h" }
+    );
+
+    res.json({ message: "Connexion réussie", token });
+  } catch (err) {
+    res.status(500).json({ error: "Erreur lors de la connexion" });
   }
-
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) {
-    return res.status(400).json({ error: "Email ou mot de passe incorrect" });
-  }
-
-  const token = jwt.sign(
-    { id: user.id, email: user.email },
-    "secretkey",
-    { expiresIn: "1h" }
-  );
-
-  res.json({ message: "Connexion réussie", token });
 };
+
 
 // Affichage du profil utilisateur (route sécurisée)
 const getUserProfile = (req, res) => {
@@ -67,43 +74,69 @@ const getUserProfile = (req, res) => {
 
 
 // Mise à jour du profil utilisateur
-const updateUserProfile = (req, res) => {
+const updateUserProfile = async (req, res) => {
   const { name, email, password } = req.body;
-  const user = users.find((u) => u.id === req.user.id);
+  const userId = req.user.id;
 
-  if (!user) {
-    return res.status(404).json({ error: "Utilisateur non trouvé" });
+  try {
+    let updateQuery = 'UPDATE users SET ';
+    const updateValues = [];
+    
+    if (name) {
+      updateQuery += 'name = ?, ';
+      updateValues.push(name);
+    }
+
+    if (email) {
+      updateQuery += 'email = ?, ';
+      updateValues.push(email);
+    }
+
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+      updateQuery += 'password = ?, ';
+      updateValues.push(hashedPassword);
+    }
+
+    updateQuery = updateQuery.slice(0, -2); // Remove last comma and space
+    updateQuery += ' WHERE id = ?';
+    updateValues.push(userId);
+
+    await db.query(updateQuery, updateValues);
+
+    res.json({ message: "Profil mis à jour avec succès" });
+  } catch (err) {
+    res.status(500).json({ error: "Erreur lors de la mise à jour du profil" });
   }
-
-  if (name) user.name = name;
-  if (email) user.email = email;
-  if (password) {
-    const salt = bcrypt.genSaltSync(10);
-    user.password = bcrypt.hashSync(password, salt);
-  }
-
-  res.json({ message: "Profil mis à jour avec succès", user });
 };
+
 
 // Suppression de l'utilisateur
-const deleteUser = (req, res) => {
-  const userIndex = users.findIndex((u) => u.id === req.user.id);
+const deleteUser = async (req, res) => {
+  const userId = req.user.id;
 
-  if (userIndex === -1) {
-    return res.status(404).json({ error: "Utilisateur non trouvé" });
+  try {
+    await db.query('DELETE FROM users WHERE id = ?', [userId]);
+    res.json({ message: "Compte supprimé avec succès" });
+  } catch (err) {
+    res.status(500).json({ error: "Erreur lors de la suppression de l'utilisateur" });
   }
-
-  users.splice(userIndex, 1);
-  res.json({ message: "Compte supprimé avec succès" });
 };
 
+
 // Liste des utilisateurs (accessible aux admins uniquement)
-const getAllUsers = (req, res) => {
+const getAllUsers = async (req, res) => {
   if (req.user.role !== "ADMIN") {
     return res.status(403).json({ error: "Accès refusé" });
   }
 
-  res.json({ message: "Liste des utilisateurs", users });
+  try {
+    const [users] = await db.query('SELECT id, name, email, role FROM users');
+    res.json({ message: "Liste des utilisateurs", users });
+  } catch (err) {
+    res.status(500).json({ error: "Erreur lors de la récupération des utilisateurs" });
+  }
 };
 
 
