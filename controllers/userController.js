@@ -12,6 +12,7 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ error: "Tous les champs sont requis" });
   }
 
+  
   try {
       const [userExists] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
 

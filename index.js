@@ -19,6 +19,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+
 // Routes principales
 app.use("/api/users", userRoutes);
 app.use("/api/categories", categoryRoutes);

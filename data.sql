@@ -1,4 +1,4 @@
--- Active: 1735845741921@@127.0.0.1@3306@eventura
+-- Active: 1735845741921@@127.0.0.1@3306@test
 -- Table des utilisateurs
 CREATE TABLE users (
   id INT PRIMARY KEY AUTO_INCREMENT,
